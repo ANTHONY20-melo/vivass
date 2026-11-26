@@ -1,0 +1,19 @@
+# Upload mínimo para o build da SPA (apps/web) a partir da raiz do monorepo.
+# Não ignorar packages/shared: o build de web depende dele.
+node_modules
+**/node_modules
+.git
+.vercel
+*.log
+.env
+.env.local
+*.db
+*.db-journal
+apps/web/dist
+packages/shared/dist
+playwright-report
+test-results
+docs
+scripts
+.DS_Store
+Thumbs.db
