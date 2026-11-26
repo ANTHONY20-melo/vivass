@@ -1,0 +1,42 @@
+{
+  "name": "vivass",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VIVASS — plataforma de gestão educacional integrada (Vida, Valores, Aprendizado, Saúde e Sustentabilidade)",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "predev": "npm run build --workspace @vivass/shared",
+    "dev": "concurrently -k -n api,web -c green,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace @vivass/api",
+    "dev:web": "npm run dev --workspace @vivass/web",
+    "build": "npm run build --workspace @vivass/shared && npm run build --workspace @vivass/api && npm run build --workspace @vivass/web",
+    "start": "npm run start --workspace @vivass/api",
+    "test": "npm run test --workspace @vivass/api",
+    "test:e2e": "npm run test:e2e --workspace @vivass/web",
+    "typecheck": "npm run typecheck --workspace @vivass/shared && npm run typecheck --workspace @vivass/api && npm run typecheck --workspace @vivass/web",
+    "db:migrate": "npm run db:migrate --workspace @vivass/api",
+    "db:seed": "npm run db:seed --workspace @vivass/api",
+    "db:reset": "npm run db:reset --workspace @vivass/api",
+    "security:audit": "node scripts/security-audit.cjs",
+    "load:test": "node scripts/load-test.cjs",
+    "pg:check": "node scripts/pg-migration-check.cjs",
+    "backup": "node scripts/backup-restore.cjs backup",
+    "restore": "node scripts/backup-restore.cjs restore"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@prisma/client@6.19.3": true,
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true
+  }
+}

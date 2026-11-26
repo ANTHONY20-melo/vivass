@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-forest-950: #04211a;
+  --color-forest-900: #072b22;
+  --color-forest-800: #0b3a2c;
+  --color-forest-700: #104a38;
+  --color-forest-600: #166149;
+  --color-forest-500: #1f7a5b;
+
+  --color-leaf-500: #3fae7f;
+  --color-leaf-400: #5fc795;
+  --color-leaf-300: #8fdbb4;
+  --color-leaf-200: #c3eeda;
+  --color-leaf-100: #e3f7ee;
+
+  --color-sand-50: #fbfaf6;
+  --color-sand-100: #f4f2ea;
+  --color-sand-200: #e7e3d6;
+  --color-sand-300: #d3cfc0;
+
+  --color-ink-900: #15211c;
+  --color-ink-700: #33463d;
+  --color-ink-600: #4e6259;
+  --color-ink-400: #7d8f86;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-sand-50 font-sans text-ink-900 antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-leaf-500);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-leaf-200);
+    color: var(--color-forest-950);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-sand-200 bg-white shadow-sm;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink-700;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-forest-600 focus:ring-4 focus:ring-leaf-200/60 focus:outline-none;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-forest-800 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-sand-300 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-sand-100 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+}
