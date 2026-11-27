@@ -28,6 +28,7 @@
     "@fastify/rate-limit": "^10.2.1",
     "@fastify/static": "^11.0.0",
     "@prisma/client": "^6.7.0",
+    "@types/node": "^22.10.0",
     "@vivass/shared": "*",
     "dotenv": "^16.4.5",
     "exceljs": "^3.4.0",
@@ -38,7 +39,6 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
     "@types/pdfkit": "^0.17.7",
     "prisma": "^6.7.0",
     "tsx": "^4.19.2",
