@@ -144,17 +144,24 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           {VIVASS_AXES.map((axis) => {
             const Icon = AXIS_ICONS[axis]
             return (
-              <li
-                key={axis}
-                className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-leaf-100/50"
-                aria-disabled="true"
-              >
-                <Icon
-                  className="h-[18px] w-[18px]"
-                  style={{ color: AXIS_COLORS[axis] }}
-                  aria-hidden="true"
-                />
-                <span className="flex-1">{AXIS_LABELS[axis]}</span>
+              <li key={axis}>
+                <NavLink
+                  to={`/app/eixos?axis=${axis}`}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                      isActive
+                        ? 'bg-white/12 text-white'
+                        : 'text-leaf-100/75 hover:bg-white/8 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon
+                    className="h-[18px] w-[18px]"
+                    style={{ color: AXIS_COLORS[axis] }}
+                    aria-hidden="true"
+                  />
+                  <span className="flex-1">{AXIS_LABELS[axis]}</span>
+                </NavLink>
               </li>
             )
           })}

@@ -1,19 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
-import { Info, Radar } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { Info, Radar, ArrowLeft } from 'lucide-react'
 import type { AxisSummary } from '@vivass/shared'
 import {
   AXIS_COLORS,
   AXIS_LABELS,
   AXIS_TAGLINES,
   DIMENSION_LABELS,
+  VIVASS_AXES,
 } from '@vivass/shared'
 import { apiFetch } from '../lib/api'
 import { useInstitution } from '../lib/institution'
 import { formatNumber } from '../lib/format'
 import { EmptyState, LoadingBlock, PageHeader } from '../components/ui'
+import { NavLink } from 'react-router-dom'
 
 export function AxesPage() {
   const { current, loading: institutionLoading } = useInstitution()
+  const [searchParams] = useSearchParams()
+  const axisFilter = searchParams.get('axis')
 
   const query = useQuery({
     queryKey: ['axes', current?.id],
@@ -33,12 +38,28 @@ export function AxesPage() {
   }
 
   const axes = query.data ?? []
+  const filteredAxes = axisFilter ? axes.filter((a) => a.axis === axisFilter) : axes
+  const selectedAxis = axisFilter ? axes.find((a) => a.axis === axisFilter) : null
+
+  const showBackLink = Boolean(axisFilter)
 
   return (
     <div>
+      {showBackLink && (
+        <NavLink
+          to="/app/eixos"
+          className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-forest-700 hover:text-forest-900"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Voltar aos eixos
+        </NavLink>
+      )}
+
       <PageHeader
-        title="Eixos do VIVASS"
-        description={`Como as ações de ${current.name} se distribuem entre vida, valores, aprendizado, saúde e sustentabilidade.`}
+        title={showBackLink ? AXIS_LABELS[axisFilter as keyof typeof AXIS_LABELS] : 'Eixos do VIVASS'}
+        description={showBackLink
+          ? AXIS_TAGLINES[axisFilter as keyof typeof AXIS_TAGLINES]
+          : `Como as ações de ${current.name} se distribuem entre vida, valores, aprendizado, saúde e sustentabilidade.`}
       />
 
       <div className="mb-5 flex items-start gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
@@ -54,7 +75,7 @@ export function AxesPage() {
         <LoadingBlock label="Carregando eixos…" />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {axes.map((axis) => {
+          {filteredAxes.map((axis) => {
             const color = AXIS_COLORS[axis.axis]
             const max = Math.max(1, ...axis.byDimension.map((item) => item.activities))
             return (

@@ -22,7 +22,7 @@ export const AXIS_TAGLINES: Record<VivassAxis, string> = {
   VALORES: 'Formação humana, cidadania e convivência',
   APRENDIZADO: 'Desenvolvimento educacional e competências',
   SAUDE: 'Escola, saúde e comunidade integradas',
-  SUSTENTABILIDADE: 'Educação ambiental e responsabilidade socioambiental',
+  SUSTENTABILIDADE: 'Abordagem biopsicossocial e responsabilidade socioambiental',
 }
 
 export const AXIS_COLORS: Record<VivassAxis, string> = {
