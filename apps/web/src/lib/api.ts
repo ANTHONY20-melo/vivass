@@ -1,6 +1,12 @@
 import type { ApiErrorBody, AuthResponse } from '@vivass/shared'
 
-const BASE = '/api'
+/**
+ * Origem da API. Em produção com front e back em hosts diferentes (Vercel + Railway),
+ * `VITE_API_URL` aponta para a API; sem a variável, usa o mesmo domínio (proxy do Vite
+ * em dev e API servindo a SPA em produção).
+ */
+const API_ORIGIN = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
+const BASE = `${API_ORIGIN}/api`
 
 let accessToken: string | null = null
 let refreshInFlight: Promise<AuthResponse | null> | null = null
@@ -30,7 +36,7 @@ export function getAccessToken(): string | null {
 async function requestRefresh(): Promise<AuthResponse | null> {
   const response = await fetch(`${BASE}/auth/refresh`, {
     method: 'POST',
-    credentials: 'same-origin',
+    credentials: 'include',
   })
 
   if (!response.ok) {
@@ -70,7 +76,7 @@ export async function apiFetch<T>(
   const response = await fetch(`${BASE}${path}`, {
     ...init,
     headers,
-    credentials: 'same-origin',
+    credentials: 'include',
   })
 
   if (response.status === 401 && retry && !path.startsWith('/auth/')) {
@@ -105,7 +111,7 @@ export async function apiDownload(path: string, filename: string): Promise<void>
 
   const response = await fetch(`${BASE}${path}`, {
     headers,
-    credentials: 'same-origin',
+    credentials: 'include',
   })
 
   if (!response.ok) {

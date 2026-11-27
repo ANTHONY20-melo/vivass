@@ -10,7 +10,12 @@ export const REFRESH_COOKIE = 'vivass_rt'
 export function refreshCookieOptions(expiresAt?: Date): CookieSerializeOptions {
   return {
     httpOnly: true,
-    sameSite: 'lax',
+    /**
+     * Front e API em hosts diferentes (Vercel + Railway) tornam o request cross-site:
+     * `lax` não envia o cookie, então o refresh falha. `none` exige `secure`.
+     * Em desenvolvimento (http, mesma origem) `lax` é o correto.
+     */
+    sameSite: env.COOKIE_SECURE ? 'none' : 'lax',
     secure: env.COOKIE_SECURE,
     path: '/api/auth',
     ...(expiresAt ? { expires: expiresAt } : {}),

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
+import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import fastifyStatic from '@fastify/static'
@@ -43,6 +44,21 @@ export async function buildApp(): Promise<FastifyInstance> {
           }
         : false,
     crossOriginEmbedderPolicy: false,
+  })
+
+  /**
+   * CORS: o SPA pode rodar em outro host (Vercel) chamando esta API (Railway).
+   * `WEB_ORIGIN` aceita uma lista separada por vírgula. `credentials: true` é
+   * obrigatório para o cookie de refresh viajar entre origens.
+   */
+  await app.register(cors, {
+    origin: env.WEB_ORIGIN.split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Disposition'],
   })
 
   await app.register(cookie)

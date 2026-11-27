@@ -8,9 +8,13 @@ instituições de ensino. Não é um site institucional: é uma aplicação com 
 autenticação, controle de acesso por perfil, isolamento de dados por instituição,
 auditoria e painel de indicadores.
 
-> **Status desta entrega: Fase 1 concluída** — fundação técnica, autenticação, RBAC
-> multi-instituição, identidade visual, painel real e gestão de instituições/equipes.
-> As fases seguintes estão descritas em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Status desta entrega: Fases 1–6 concluídas** — fundação, autenticação, RBAC multi-instituição,
+> identidade visual, painel real, gestão institucional completa (estudantes, turmas, consentimentos LGPD),
+> módulos VIVASS (projetos, atividades, eixos, dimensões biopsicossociais),
+> planejamento (planos de ação, marcos, diagnóstico anônimo),
+> inteligência (comunicados, biblioteca, relatórios PDF/Excel, portal, calendário),
+> validação (E2E Playwright, RBAC matrix, OWASP ASVS, WCAG 2.2 AA, load test, PG migration, backup/restore, runbook).
+> Próximos passos em [`docs/ROADMAP.md`](docs/ROADMAP.md) — Fase 7 (expansão).
 
 ---
 
@@ -20,7 +24,7 @@ auditoria e painel de indicadores.
 |---|---|---|
 | Runtime | Node.js 24 LTS | já instalado no ambiente; `node:sqlite` e recursos modernos |
 | API | Fastify 5 + TypeScript | baixo overhead, plugins maduros, validação explícita |
-| Banco | SQLite (dev) via Prisma 6 | zero infraestrutura local; schema compatível com PostgreSQL |
+| Banco | SQLite (dev) / PostgreSQL (prod) via Prisma 6 | zero infra local; schema compatível; Supabase (pooler) em produção |
 | Validação | Zod 4 (`@vivass/shared`) | um contrato só para API e interface |
 | Frontend | React 19 + Vite 7 + TypeScript | SPA servida pela própria API em produção |
 | Estilo | Tailwind CSS 4 | design system com tokens, sem CSS morto |
@@ -140,17 +144,38 @@ família/estudante e biopsicossocial. Nada disso é botão morto: os itens apare
 | `npm start` | sobe a API servindo também o build da interface |
 | `npm test` | testes de integração da API |
 | `npm run typecheck` | TypeScript estrito nos três pacotes |
-| `npm run db:migrate` | cria/aplica migração de desenvolvimento |
+| `npm run db:migrate` | cria/aplica migração de desenvolvimento (SQLite) |
 | `npm run db:seed` | recria os dados de demonstração |
 | `npm run db:reset` | zera o banco e reaplica tudo |
+| `npm run db:migrate:prod` | aplica migrações em produção (PostgreSQL/Supabase) |
 
-Produção:
+Produção (Supabase + Railway/Vercel):
 
 ```powershell
+# 1. Configure apps/api/.env com variáveis de produção (veja apps/api/.env.production)
+# DATABASE_URL=postgresql://postgres.zlxzrxloasnuitugntxj:<SENHA_DO_BANCO>@aws-1-us-east-1.pooler.supabase.com:6543/postgres
+# JWT_SECRET=... (gere com: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))")
+# COOKIE_SECURE=true
+# WEB_ORIGIN=https://seu-front.vercel.app
+
+# 2. Build
 npm run build
-$env:NODE_ENV="production"; $env:COOKIE_SECURE="true"
-npm start        # http://localhost:3333 serve API + SPA
+
+# 3. Deploy API no Railway (com PostgreSQL Supabase)
+#    - Root Directory: apps/api
+#    - Variáveis: DATABASE_URL, JWT_SECRET, COOKIE_SECURE=true, WEB_ORIGIN, NODE_ENV=production
+#    - Railway roda: npx prisma migrate deploy && npx prisma db seed
+
+# 4. Deploy Web no Vercel
+#    - Root Directory: apps/web
+#    - Variável: VITE_API_URL=https://sua-api.railway.app
+
+# 5. Conecte os dois
+#    Vercel: Settings → Env → VITE_API_URL = https://sua-api.railway.app
+#    Railway: Variables → WEB_ORIGIN = https://seu-front.vercel.app
 ```
+
+Desenvolvimento local (SQLite):
 
 ---
 
