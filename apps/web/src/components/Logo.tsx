@@ -50,7 +50,7 @@ export function Logo({ variant = 'dark', withTagline = true, className = '' }: L
         </div>
         {withTagline ? (
           <div className={`text-[11px] font-medium ${taglineColor}`}>
-            Educação integrada
+            Biopsicossocial integrado
           </div>
         ) : null}
       </div>

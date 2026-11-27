@@ -177,7 +177,7 @@ async function buildPdf(data: ReportData): Promise<Buffer> {
     .fontSize(10)
     .font('Helvetica')
     .fillColor('#c3eeda')
-    .text('Educacao integrada para transformar vidas', 48, 62)
+    .text('Biopsicossocial integrado para transformar vidas', 48, 62)
   doc
     .fontSize(9)
     .font('Helvetica')

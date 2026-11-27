@@ -1,7 +1,7 @@
-# VIVASS — Plataforma de Gestão Educacional Integrada
+# VIVASS — Plataforma de Gestão Biopsicossocial Integrada
 
 **Vida, Valores, Aprendizado, Saúde e Sustentabilidade.**
-_Educação integrada para transformar vidas._
+_Biopsicossocial integrado para transformar vidas._
 
 Sistema de gestão, planejamento, acompanhamento e avaliação do Projeto VIVASS em
 instituições de ensino. Não é um site institucional: é uma aplicação com banco de dados,

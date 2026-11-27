@@ -68,7 +68,7 @@ export function LoginPage() {
         <div className="relative">
           <Logo variant="light" />
           <h1 className="mt-10 max-w-xl text-3xl font-extrabold tracking-tight sm:text-4xl lg:mt-16 lg:text-[2.6rem] lg:leading-tight">
-            Educação integrada para transformar vidas.
+            Biopsicossocial integrado para transformar vidas.
           </h1>
           <p className="mt-4 max-w-lg text-sm leading-relaxed text-leaf-100/80 sm:text-base">
             Uma única estrutura para planejar, executar e avaliar ações de vida, valores,
@@ -104,7 +104,7 @@ export function LoginPage() {
             <LogoMark className="h-10 w-10" />
             <div>
               <p className="text-lg font-extrabold tracking-[0.22em] text-forest-900">VIVASS</p>
-              <p className="text-[11px] text-ink-600">Educação integrada</p>
+              <p className="text-[11px] text-ink-600">Biopsicossocial integrado</p>
             </div>
           </div>
 

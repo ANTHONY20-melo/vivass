@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "VIVASS — plataforma de gestão educacional integrada (Vida, Valores, Aprendizado, Saúde e Sustentabilidade)",
+  "description": "VIVASS — plataforma de gestão biopsicossocial integrada (Vida, Valores, Aprendizado, Saúde e Sustentabilidade)",
   "engines": {
     "node": ">=22"
   },
