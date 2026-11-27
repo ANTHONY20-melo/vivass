@@ -4,13 +4,14 @@
   "buildCommand": "npm run db:generate:prod --workspace @vivass/api && npm run build --workspace @vivass/shared && npm run build --workspace @vivass/api && npm run build --workspace @vivass/web",
   "outputDirectory": "apps/web/dist",
   "functions": {
-    "api/[...route].ts": {
+    "api/index.ts": {
       "memory": 1024,
       "maxDuration": 60,
       "includeFiles": "node_modules/.prisma/**,apps/api/dist/**,packages/shared/dist/**"
     }
   },
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
