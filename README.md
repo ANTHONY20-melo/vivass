@@ -147,35 +147,49 @@ família/estudante e biopsicossocial. Nada disso é botão morto: os itens apare
 | `npm run db:migrate` | cria/aplica migração de desenvolvimento (SQLite) |
 | `npm run db:seed` | recria os dados de demonstração |
 | `npm run db:reset` | zera o banco e reaplica tudo |
+| `npm run db:generate:prod` | gera o client a partir do schema PostgreSQL |
 | `npm run db:migrate:prod` | aplica migrações em produção (PostgreSQL/Supabase) |
+| `npm run db:seed:prod` | popula o banco de produção |
+| `npm run schema:check` | falha se os schemas SQLite e Postgres divergirem |
 
-Produção (Supabase + Railway/Vercel):
+### Dois schemas do Prisma
+
+O Prisma não aceita `provider` dinâmico via variável de ambiente, então existem dois arquivos:
+
+| Arquivo | Provider | Uso |
+|---|---|---|
+| `apps/api/prisma/schema.prisma` | SQLite | desenvolvimento e testes — sem infraestrutura local |
+| `apps/api/prisma-postgres/schema.prisma` | PostgreSQL | produção (Supabase) |
+
+Os **modelos devem ser idênticos** nos dois arquivos. `npm run schema:check` falha no primeiro
+campo divergente — a duplicação é uma dívida aceita, o drift silencioso não.
+
+Produção (Supabase + Railway + Vercel):
 
 ```powershell
-# 1. Configure apps/api/.env com variáveis de produção (veja apps/api/.env.production)
-# DATABASE_URL=postgresql://postgres.zlxzrxloasnuitugntxj:<SENHA_DO_BANCO>@aws-1-us-east-1.pooler.supabase.com:6543/postgres
-# JWT_SECRET=... (gere com: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))")
-# COOKIE_SECURE=true
-# WEB_ORIGIN=https://seu-front.vercel.app
+# 1. Variáveis da API (definidas no painel do Railway). NUNCA comite esses valores.
+# DATABASE_URL  = string de conexão do Supabase (pooler, porta 6543)
+# JWT_SECRET    = node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+# COOKIE_SECURE = true
+# WEB_ORIGIN    = https://<seu-front>.vercel.app
+# NODE_ENV      = production
 
-# 2. Build
-npm run build
+# 2. Railway — Root Directory: apps/api
+#    Build:  npm run db:generate:prod && npm run build --workspace @vivass/shared && npm run build --workspace @vivass/api
+#    Start:  node dist/server.js
+#    Deploy: npm run db:migrate:prod   (uma vez, e a cada migração nova)
 
-# 3. Deploy API no Railway (com PostgreSQL Supabase)
-#    - Root Directory: apps/api
-#    - Variáveis: DATABASE_URL, JWT_SECRET, COOKIE_SECURE=true, WEB_ORIGIN, NODE_ENV=production
-#    - Railway roda: npx prisma migrate deploy && npx prisma db seed
+# 3. Vercel — Root Directory: RAIZ do repositório (não apps/web)
+#    O front depende do workspace @vivass/shared; buildar de apps/web não resolve o pacote.
+#    Build:    npm run build --workspace @vivass/shared && npm run build --workspace @vivass/web
+#    Output:   apps/web/dist
+#    Variável: VITE_API_URL = https://<sua-api>.railway.app
 
-# 4. Deploy Web no Vercel
-#    - Root Directory: apps/web
-#    - Variável: VITE_API_URL=https://sua-api.railway.app
-
-# 5. Conecte os dois
-#    Vercel: Settings → Env → VITE_API_URL = https://sua-api.railway.app
-#    Railway: Variables → WEB_ORIGIN = https://seu-front.vercel.app
+# 4. Amarre as origens nos dois lados
+#    WEB_ORIGIN (Railway) precisa conter a URL do Vercel.
+#    VITE_API_URL (Vercel) precisa ser a URL do Railway.
+#    Origem divergente = CORS bloqueado e cookie de refresh descartado pelo navegador.
 ```
-
-Desenvolvimento local (SQLite):
 
 ---
 

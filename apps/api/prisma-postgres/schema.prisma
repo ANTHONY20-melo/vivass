@@ -1,0 +1,366 @@
+// VIVASS — schema relacional para PostgreSQL (produção: Supabase).
+// Cópia de prisma/schema.prisma com o provider trocado. Os modelos DEVEM ser idênticos:
+// qualquer alteração de modelo tem de ser feita nos dois arquivos (npm run schema:check).
+// Motivo da duplicação: dev e testes usam SQLite (sem infraestrutura local); produção usa
+// Postgres. O Prisma não aceita provider dinâmico via env(), então são dois schemas.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Institution {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  kind      String // MUNICIPAL | ESTADUAL | PRIVADA | COMUNITARIA
+  city      String
+  state     String
+  status    String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  isDemo    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  cycles        Cycle[]
+  classes       SchoolClass[]
+  students      Student[]
+  projects      Project[]
+  activities    Activity[]
+  auditLogs     AuditLog[]
+  consents      Consent[]
+  dataRequests  DataRequest[]
+  plans         ActionPlan[]
+  diagnostics   Diagnostic[]
+  answers       DiagnosticAnswer[]
+  announcements Announcement[]
+  libraryItems  LibraryItem[]
+
+  @@index([state, city])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  platformRole String    @default("USER") // SUPERADMIN | USER
+  status       String    @default("ACTIVE") // ACTIVE | BLOCKED
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  memberships   Membership[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+}
+
+model Membership {
+  id            String   @id @default(cuid())
+  userId        String
+  institutionId String
+  role          String // SCHOOL_MANAGER | COORDINATOR | TEACHER | MULTIDISCIPLINARY | FAMILY | STUDENT
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, institutionId])
+  @@index([institutionId, role])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+model Cycle {
+  id            String    @id @default(cuid())
+  institutionId String
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  status        String    @default("ACTIVE") // PLANNED | ACTIVE | CLOSED
+  createdAt     DateTime  @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, status])
+}
+
+model SchoolClass {
+  id            String   @id @default(cuid())
+  institutionId String
+  name          String
+  year          Int
+  shift         String   @default("MANHA") // MANHA | TARDE | INTEGRAL | NOITE
+  createdAt     DateTime @default(now())
+
+  institution   Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  students      Student[]
+  announcements Announcement[]
+
+  @@unique([institutionId, name, year])
+}
+
+model Student {
+  id            String    @id @default(cuid())
+  institutionId String
+  classId       String?
+  name          String
+  birthDate     DateTime?
+  guardianName  String?
+  guardianPhone String?
+  guardianEmail String?
+  notes         String?
+  status        String    @default("ACTIVE") // ACTIVE | INACTIVE
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  institution Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  class       SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  consents    Consent[]
+
+  @@index([institutionId, status])
+  @@index([institutionId, classId])
+  @@index([institutionId, name])
+}
+
+model Project {
+  id            String    @id @default(cuid())
+  institutionId String
+  name          String
+  description   String?
+  objective     String?
+  axis          String // VIDA | VALORES | APRENDIZADO | SAUDE | SUSTENTABILIDADE
+  dimension     String // BIO | PSICO | SOCIAL | AMBIENTAL
+  status        String    @default("PLANNED") // PLANNED | ACTIVE | COMPLETED | SUSPENDED
+  startDate     DateTime?
+  endDate       DateTime?
+  createdById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  institution Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  activities  Activity[]
+  plans       ActionPlan[]
+
+  @@index([institutionId, status])
+  @@index([institutionId, axis])
+}
+
+model Activity {
+  id            String    @id @default(cuid())
+  institutionId String
+  projectId     String?
+  title         String
+  description   String?
+  axis          String
+  dimension     String
+  status        String    @default("PLANNED") // PLANNED | IN_PROGRESS | COMPLETED | CANCELLED
+  scheduledAt   DateTime?
+  completedAt   DateTime?
+  participants  Int       @default(0)
+  createdById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  project     Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([institutionId, scheduledAt])
+  @@index([institutionId, axis, status])
+  @@index([projectId])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String?
+  institutionId String?
+  action        String
+  entity        String
+  entityId      String?
+  metadata      String?
+  ip            String?
+  createdAt     DateTime @default(now())
+
+  actor       User?        @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  institution Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+
+  @@index([institutionId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+/* ------------------------------------------------------------------ *
+ * Fase 2 — consentimento, direitos do titular
+ * ------------------------------------------------------------------ */
+
+model Consent {
+  id              String    @id @default(cuid())
+  institutionId   String
+  studentId       String
+  type            String // DATA | IMAGE | HEALTH
+  grantedBy       String
+  grantedAt       DateTime  @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  documentVersion String    @default("1.0")
+  createdAt       DateTime  @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, studentId])
+  @@index([studentId, type])
+}
+
+model DataRequest {
+  id             String   @id @default(cuid())
+  institutionId  String
+  requesterName  String
+  requesterEmail String
+  type           String // ACCESS | CORRECTION | DELETION | PORTABILITY
+  status         String   @default("OPEN") // OPEN | IN_PROGRESS | DONE | REJECTED
+  details        String
+  resolution     String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, status])
+  @@index([institutionId, createdAt])
+}
+
+/* ------------------------------------------------------------------ *
+ * Fase 4 — planos de ação e diagnóstico de percepção
+ * ------------------------------------------------------------------ */
+
+model ActionPlan {
+  id            String    @id @default(cuid())
+  institutionId String
+  projectId     String?
+  title         String
+  objective     String
+  axis          String
+  responsible   String
+  startDate     DateTime?
+  dueDate       DateTime?
+  status        String    @default("DRAFT") // DRAFT | ACTIVE | COMPLETED | CANCELLED
+  progress      Int       @default(0)
+  createdById   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  institution Institution     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestones  PlanMilestone[]
+
+  @@index([institutionId, status])
+  @@index([institutionId, axis])
+}
+
+model PlanMilestone {
+  id        String    @id @default(cuid())
+  planId    String
+  title     String
+  dueDate   DateTime?
+  done      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  plan ActionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+}
+
+model Diagnostic {
+  id            String   @id @default(cuid())
+  institutionId String
+  title         String
+  description   String?
+  status        String   @default("OPEN") // OPEN | CLOSED
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  institution Institution        @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  answers     DiagnosticAnswer[]
+
+  @@index([institutionId, status])
+}
+
+/** Resposta anônima: sem vínculo com estudante, usuário ou turma. */
+model DiagnosticAnswer {
+  id            String   @id @default(cuid())
+  diagnosticId  String
+  institutionId String
+  axis          String
+  dimension     String
+  questionKey   String
+  value         Int // 1..5
+  createdAt     DateTime @default(now())
+
+  diagnostic  Diagnostic  @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([diagnosticId, questionKey])
+  @@index([institutionId, axis])
+}
+
+/* ------------------------------------------------------------------ *
+ * Fase 5 — comunicados e biblioteca
+ * ------------------------------------------------------------------ */
+
+model Announcement {
+  id            String    @id @default(cuid())
+  institutionId String
+  title         String
+  body          String
+  audience      String    @default("ALL") // ALL | PROFESSIONALS | FAMILIES | STUDENTS
+  classId       String?
+  publishedAt   DateTime  @default(now())
+  expiresAt     DateTime?
+  createdById   String?
+  createdAt     DateTime  @default(now())
+
+  institution Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  class       SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  @@index([institutionId, publishedAt])
+  @@index([institutionId, audience])
+}
+
+model LibraryItem {
+  id            String   @id @default(cuid())
+  institutionId String
+  title         String
+  description   String?
+  category      String // VIDA | VALORES | APRENDIZADO | SAUDE | SUSTENTABILIDADE | GERAL
+  kind          String // LINK | TEXT | FILE
+  url           String?
+  content       String?
+  audience      String   @default("ALL") // ALL | PROFESSIONALS | FAMILIES | STUDENTS
+  createdById   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, category])
+  @@index([institutionId, audience])
+}
