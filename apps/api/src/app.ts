@@ -6,7 +6,6 @@ import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
-import fastifyStatic from '@fastify/static'
 import { env } from './env.js'
 import { errorHandler } from './lib/errors.js'
 import { authPlugin } from './plugins/auth.js'
@@ -46,11 +45,6 @@ export async function buildApp(): Promise<FastifyInstance> {
     crossOriginEmbedderPolicy: false,
   })
 
-  /**
-   * CORS: o SPA pode rodar em outro host (Vercel) chamando esta API (Railway).
-   * `WEB_ORIGIN` aceita uma lista separada por vírgula. `credentials: true` é
-   * obrigatório para o cookie de refresh viajar entre origens.
-   */
   await app.register(cors, {
     origin: env.WEB_ORIGIN.split(',')
       .map((origin) => origin.trim())
@@ -62,17 +56,20 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   await app.register(cookie)
-  await app.register(rateLimit, {
-    max: 300,
-    timeWindow: '1 minute',
-  })
+  await app.register(rateLimit, { max: 300, timeWindow: '1 minute' })
   await app.register(authPlugin)
 
   app.setErrorHandler(errorHandler)
 
   await app.register(registerRoutes, { prefix: '/api' })
 
-  if (env.NODE_ENV === 'production' && existsSync(webDist)) {
+  // Em produção local (Railway), servimos o build da SPA se existir.
+  // Na Vercel (serverless) NÃO servimos arquivos estáticos — a Vercel faz isso.
+  // O import dinâmico evita o erro ERR_REQUIRE_ESM do @fastify/static
+  // (content-disposition v1+ é ESM puro e quebra require() no bundle serverless).
+  const isVercel = process.env.VERCEL === '1'
+  if (env.NODE_ENV === 'production' && !isVercel && existsSync(webDist)) {
+    const fastifyStatic = (await import('@fastify/static')).default
     await app.register(fastifyStatic, {
       root: webDist,
       wildcard: false,
@@ -83,10 +80,16 @@ export async function buildApp(): Promise<FastifyInstance> {
     app.setNotFoundHandler((request, reply) => {
       if (request.url.startsWith('/api')) {
         return reply.code(404).send({
-          error: { code: 'NAO_ENCONTRADO', message: 'Rota não encontrada.' },
+          error: { code: 'NAO_ENCONTRADO', message: 'Rota năo encontrada.' },
         })
       }
       return reply.sendFile('index.html')
+    })
+  } else {
+    app.setNotFoundHandler((request, reply) => {
+      return reply.code(404).send({
+        error: { code: 'NAO_ENCONTRADO', message: 'Rota năo encontrada.' },
+      })
     })
   }
 
