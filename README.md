@@ -168,7 +168,9 @@ Produção (Supabase + Railway + Vercel):
 
 ```powershell
 # 1. Variáveis da API (definidas no painel do Railway). NUNCA comite esses valores.
-# DATABASE_URL  = string de conexão do Supabase (pooler, porta 6543)
+# DATABASE_URL  = Supabase → Connect → "Session pooler" (porta 5432) + ?sslmode=require
+#                 Verificado: a porta 6543 (transaction pooler) faz `prisma migrate` TRAVAR.
+#                 Se precisar dela no runtime, use ?pgbouncer=true&connection_limit=1
 # JWT_SECRET    = node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 # COOKIE_SECURE = true
 # WEB_ORIGIN    = https://<seu-front>.vercel.app
