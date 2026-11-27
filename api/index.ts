@@ -7,7 +7,7 @@
  * as rotas sob o prefixo `/api`) e entregamos o socket do Node a ela — que é o
  * mesmo caminho de código usado por `server.ts` em produção local.
  *
- * O catch-all `[...route]` faz qualquer `/api/*` cair nesta função.
+ * O rewrite `/api/(.*)` → `/api/index` faz qualquer `/api/*` cair nesta função.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { buildApp } from '../apps/api/dist/app.js'
@@ -24,7 +24,10 @@ function getApp(): Promise<App> {
   return appPromise
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
   const app = await getApp()
   app.server.emit('request', req, res)
 }
